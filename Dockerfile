@@ -8,5 +8,4 @@ VOLUME ["/root/rpmbuild"]
 ENTRYPOINT ["/root/entrypoint.sh"]
 
 ADD entrypoint.sh /root/entrypoint.sh
-ADD rbd-docker-plugin.service /root/
-ADD rbd-docker-plugin.spec /root/
+ADD rbd-docker-plugin-wrapper rbd-docker-plugin.service rbd-docker-plugin.conf rbd-docker-plugin.spec /root/

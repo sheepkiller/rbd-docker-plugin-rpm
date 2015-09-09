@@ -12,11 +12,21 @@ Group: misc
 URL: https://github.com/yp-engineering/rbd-docker-plugin/
 Source0: https://github.com/yp-engineering/rbd-docker-plugin/archive/%{version}.tar.gz
 Source1: rbd-docker-plugin.service
-BuildArch: x86_64
+Source2: rbd-docker-plugin.conf
+Source3: rbd-docker-plugin-wrapper
+ExclusiveArch:  x86_64
 BuildRoot: %{_tmppath}/%{name}-%{version}
-BuildRequires: golang >= 1.4.0, make, librados2-devel >= 0.94.0, librbd1-devel >= 0.94.0
+BuildRequires: golang >= 1.4.2
+BuildRequires: make
+BuildRequires: librados2-devel >= 0.94.0
+BuildRequires: librbd1-devel >= 0.94.0
+BuildRequires:  pkgconfig(systemd)
 
-Requires: ceph >= 0.94.0, docker-engine >= 1.8.0
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+Requires: ceph >= 0.94.0
+Requires: docker-engine >= 1.8.0
 
 %description
 Ceph RBD docker volume driver plugin.
@@ -34,15 +44,23 @@ make
 
 %install
 install -d %{buildroot}%{_bindir}
+install -d %{buildroot}%{_libexecdir}
 install -d %{buildroot}%{_unitdir}
-install -p -m 755 dist/%{name} %{buildroot}%{_bindir}/%{name}
-install -p -D -m 755 %{S:1} %{buildroot}%{_unitdir}/
+install -d %{buildroot}%{_sysconfdir}/docker/
+install -p -m 755 dist/%{name} %{buildroot}%{_libexecdir}/%{name}
+install -p -m 644 %{S:1}  %{buildroot}%{_unitdir}/
+
+sed -e "s,%%LIBEXEC%%,%{_libexecdir}," %{S:3} >  %{buildroot}%{_bindir}/rbd-docker-plugin-wrapper
+chmod 755 %{buildroot}%{_bindir}/rbd-docker-plugin-wrapper
+sed -e "s,%%LIBEXEC%%,%{_libexecdir}," %{S:2} > %{buildroot}%{_sysconfdir}/docker/rbd-docker-plugin.conf
+chmod 644 %{buildroot}%{_sysconfdir}/docker/rbd-docker-plugin.conf
 
 %files
 %defattr(-,root,root)
 %{_unitdir}/rbd-docker-plugin.service
-%{_bindir}/%{name}
-
+%{_libexecdir}/%{name}
+%{_bindir}/rbd-docker-plugin-wrapper
+%config(noreplace) %{_sysconfdir}/docker/%{name}.conf
 %post
 %systemd_post rbd-docker-plugin.service
 
@@ -58,5 +76,8 @@ fi
 /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || true
 
 %changelog
-* Mon Sep  7 sheepkiller
+* Wed Sep 09 2015 sheepkiller
+- move plugin to /usr/libexec
+- add wrapper + config
+* Mon Sep 07 2015 sheepkiller
 - Initial version
