@@ -27,6 +27,8 @@ Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
 Requires: ceph >= 0.94.0
+Requires: librados2 >= 0.94.0
+Requires: librbd1 >= 0.94.0
 Requires: docker-engine >= 1.8.0
 
 %description
@@ -83,6 +85,7 @@ fi
 %changelog
 * Thu Sep 10 2015 sheepkiller
 - add logrotate
+- fix runtime deps
 * Wed Sep 09 2015 sheepkiller
 - move plugin to /usr/libexec
 - add wrapper + config
