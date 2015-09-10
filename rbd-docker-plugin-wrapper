@@ -4,6 +4,9 @@ set -o errexit -o nounset -o pipefail
 RBD_BIN=%LIBEXEC%/rbd-docker-plugin
 CONF=${1:-/etc/docker/rbd-docker-plugin.conf}
 
+# default
+ARGS="--create"
+[ -f ${CONF} ] && \
 ARGS=`cat ${CONF} | \
 egrep -v '(^[[:space:]]*#)' | 
 awk -F \# '{print $1}' | \
@@ -13,4 +16,5 @@ awk -F =  '{
            gsub(/[ \t]*$/, "", $2);
            printf("-%s=%s ", $1, $2)}'
 `
+
 exec ${RBD_BIN} ${ARGS} ${@}
